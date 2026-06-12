@@ -146,6 +146,63 @@ a lesson: a mean over seeds conflates "biased recovery" with "bimodal optimizati
 pre-registered per-seed or median criterion would separate them. We did not change the rule after
 seeing the data — the per-seed breakdown is provided so the reader can apply either reading.
 
+## Extended robustness sweep (pre-registered, then executed)
+
+The five review questions on the main experiment were turned into a second sweep whose grid,
+thresholds and expectations were **committed and pushed before execution**
+(`scripts/sweep_extended.py`, commit of 2026-06-12T03:10+02:00 — the tamper-evident record the
+main sweep lacked). Run: 23 conditions × 5 seeds = 115 runs on a single CUDA GPU; raw table
+committed at [`results/metrics_ext.csv`](results/metrics_ext.csv); the report below is
+machine-reproducible (`python scripts/sweep_extended.py` re-prints it from the CSVs; figures
+fig5–8 regenerate the same way). All four quantitative pre-registered predictions **passed**;
+the fifth question (basin frequency) was characterized.
+
+**Q1 — Multi-world: 4/5 worlds CONFIRM (pre-registered requirement: ≥ 4/5). PASS.**
+
+| world seed | R²_lin (conv.) | gap | cond_m | θ_max (°) | verdict |
+|---|---|---|---|---|---|
+| 1234 | 0.943 | 0.0009 | 1.018 | 1.14 | CONFIRM |
+| 2024 | 0.938 | 0.0007 | 1.019 | 0.93 | CONFIRM |
+| 31337 | 0.899 | 0.0017 | 1.011 | 0.82 | fail (gate) |
+| 777 | 0.936 | 0.0005 | 1.034 | 1.32 | CONFIRM |
+| 9001 | 0.944 | 0.0009 | 1.032 | 0.63 | CONFIRM |
+
+The one failure is itself informative: world 31337 misses the $R^2_{\text{lin}} \ge 0.90$ gate by
+0.001 because **three of its five seeds fall into the suboptimal basin** — while its geometry
+stays deep inside the confirm bands (gap 0.0017, cond_m 1.011, θ 0.82°). Across all five worlds,
+rotational recovery holds wherever recovery happens; what varies between worlds is the basin
+frequency of the optimizer, not the identifiability geometry. The rank-1 excitation sub-prediction
+replicated in all four new worlds (cond_m ~ 10⁶–10⁷ with the excited direction recovered).
+
+**Q2 — λ transition: λ\* = 0.5, inside the predicted [0.2, 0.5]. PASS — and enforcement is a
+*window*, not a threshold.** R²_lin rises 0.50 → 0.61 → 0.74 → 0.83 → 0.943 → 0.946 across
+λ = 0.05 … 0.65 while the covariance error falls 0.85 → 0.086, then **degrades to 0.83 at
+λ = 0.8** (high variance): too much enforcement starves the prediction signal that aligns the
+representation. The collapse-equilibrium argument of NOTES.md predicted the rise; the high-λ
+decline is a new, unpredicted finding (fig6). Notably, cond_m stays ≈ 1.03 at *every* λ — even
+partially collapsed runs keep a rotational action axis on the subspace they do recover.
+
+**Q3 — Budget vs wall: both walls. PASS of the decision procedure, honest boundary confirmed.**
+Doubling the budget to 8000 steps moves `n=16` by +0.044 (0.587 → 0.631) and `rho=0.99` by +0.037
+(0.737 → 0.774) — both under the pre-registered +0.05 wall bound, far from the +0.15
+optimization-limited bound. At this scale these are real limits, not impatience (fig8).
+
+**Q4 — Overcompleteness: gap grows monotonically with K. PASS.**
+gap = 0.0009 (K=8) → 0.0047 (10) → 0.0301 (12) → 0.0616 (16) → 0.1057 (24), with dynamics leakage
+staying ≈ 0.01 (fig7). The rotational signature erodes smoothly as the embedding becomes
+overcomplete — consistent with the structural impossibility of making an 8-dimensional data
+manifold isotropically Gaussian in $\mathbb{R}^K$, and directly relevant to real systems, which
+are all overcomplete.
+
+**Q5 — The basin: 7/30 base runs (23%) across 5 worlds, with a clean spectral signature.**
+Inside the basin: $\hat\rho = 0.565$ but mean eigenvalue modulus $0.999$ — the learned transition
+has **complex eigenvalue pairs**: a *rotating* suboptimal solution (the trace estimator sees the
+real parts; the moduli reveal the rotation). Frequency is world-dependent (1/5 in most worlds,
+3/5 in 31337). And even inside the basin, cond_m = 1.022: the action axis is rotationally
+recovered on the subspace the encoder does capture. The basin is an optimization-landscape
+phenomenon orthogonal to the identifiability question — and it is exactly what mean-based
+criteria trip over (see the failed dynamics check above).
+
 ## Conclusion
 
 In a controlled world satisfying the Gaussian assumptions, with the isotropy constraint actually
@@ -156,9 +213,13 @@ pre-registered dynamics check **failed** on its mean-over-seeds criterion ($\hat
 $0.9 \pm 0.05$), driven by the single reproducible optimization basin discussed above; the other
 4/5 seeds recover the dynamics in closed form ($\hat\rho = 0.894$, $D_{\text{rel}} \approx 0.01$).
 The orthogonal ambiguity of the identifiability guarantee **survives the passage to
-action-conditioning** here. The boundary of
-the claim is equally clear: enforcement strength matters (λ = 0.05 fails the precondition),
-excitation is a genuine identifiability condition (rank-deficient actions leave provably
-unidentifiable directions), overcomplete embeddings weaken the rotational signature, and a
-reproducible optimization basin can defeat mean-based criteria. These are the sharp edges the
-action-conditioned theory will need to handle.
+action-conditioning** here — and the pre-registered extension shows it survives across worlds
+(4/5 CONFIRM, the fifth failing only an optimization gate while keeping cond_m = 1.011). The
+boundary of the claim is equally clear, and now measured rather than suspected: enforcement
+strength is a *window* (λ = 0.05 collapses, λ = 0.8 starves alignment), excitation is a genuine
+identifiability condition (rank-deficient actions leave provably unidentifiable directions, in
+every world tested), overcompleteness erodes the rotational signature monotonically (gap 0.0009 →
+0.1057 for K = 8 → 24), `n=16` and `ρ=0.99` are walls at this scale (2× budget moves them by
+< 0.05), and a rotating suboptimal basin (complex eigenvalue pairs, 23% of runs across 5 worlds)
+defeats mean-based criteria while leaving the action axis rotational. These are the sharp edges
+the action-conditioned theory will need to handle.

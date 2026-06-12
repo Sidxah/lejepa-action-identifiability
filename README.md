@@ -177,8 +177,23 @@ provably unidentifiable direction under rank-1 actions — while state recovery 
 
 ![Does the ambiguity survive the passage?](results/figures/fig4_symmetric_vs_action.png)
 
-Full per-condition table (19 conditions), the failed dynamics check and its seed-level anatomy,
-and the refined reading of the literal-noise artifact: **[RESULTS.md](RESULTS.md)**.
+**Pre-registered extension (robustness).** The review questions on the main sweep were turned
+into a second grid whose thresholds were committed *before* execution
+([scripts/sweep_extended.py](scripts/sweep_extended.py), 115 further runs,
+[results/metrics_ext.csv](results/metrics_ext.csv)). All four quantitative predictions passed:
+**4/5 fresh worlds CONFIRM** (the fifth misses only the R² gate, by 0.001, from optimization-basin
+frequency — its cond_m is 1.011); the λ calibration is an enforcement **window** (λ\* = 0.5;
+λ = 0.8 starves alignment); the lin–orth gap grows **monotonically with overcompleteness**
+(0.0009 → 0.1057 for K = 8 → 24); and `n=16` / `ρ=0.99` are **walls, not budget artifacts**
+(2× steps moves them by < +0.05). The suboptimal basin occurs in 23% of base runs across all
+worlds, with a clean spectral signature (complex eigenvalue pairs — a *rotating* suboptimal
+solution) — and even inside it the action axis stays rotational (cond_m = 1.022).
+
+![State gap and action-axis condition number across five independent worlds](results/figures/fig5_multiworld.png)
+
+Full per-condition tables (19 + 23 conditions), the failed dynamics check and its seed-level
+anatomy, the λ window, and the refined reading of the literal-noise artifact:
+**[RESULTS.md](RESULTS.md)**.
 
 ## 6. Reproduce
 
@@ -220,10 +235,11 @@ RESULTS.md         # full results & interpretation            NOTES.md  # design
 Toy scale by design: linear-Gaussian dynamics, $`n = 8`$, a frozen smooth observation map. This is
 an empirical result in a world satisfying the theory's assumptions — not a theorem, and not
 evidence about web-scale models (the V-JEPA 2 number anchors the metric's scale, nothing more).
-The sensitivity cells mark the honest boundary: at fixed training budget, recovery degrades for
-$`n = 16`$ and $`\rho = 0.99`$; an overcomplete embedding ($`K = 16 > n`$) opens the only
-non-trivial gap in the sweep (0.062); and one training seed falls into a reproducible suboptimal
-basin that defeats mean-based criteria — the multi-seed protocol catches it. What this opens: the
+The boundary is measured, not suspected (pre-registered extension): $`n = 16`$ and
+$`\rho = 0.99`$ are walls at this scale (2× budget moves them by < 0.05); overcompleteness erodes
+the rotational signature monotonically (gap 0.0009 → 0.1057 for $`K`$ = 8 → 24); and a rotating
+suboptimal optimization basin (complex eigenvalue pairs) catches 23% of runs across five worlds,
+defeating mean-based criteria — the multi-seed protocol catches *it*. What this opens: the
 action-conditioned identifiability *proof* (this repo is its testbed), richer worlds (nonlinear
 dynamics, partial observability), and whether the condition-number diagnostic predicts planning
 performance at scale. Research statement: link to be added.
