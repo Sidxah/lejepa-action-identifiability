@@ -312,12 +312,29 @@ def main():
     n_runs = sum(len(c.train_seeds) for _, c in grid)
     print(f"extended sweep: {len(grid)} conditions, {n_runs} runs, device {device}")
     t0 = time.time()
+    # Crash-resilient accumulation: after every condition the partial CSV is
+    # rewritten; on restart, conditions already complete in it are skipped.
+    # (Engineering only -- the pre-registered rules above are untouched.)
+    partial = out_csv.with_suffix(".partial.csv")
     rows = []
+    if partial.exists():
+        prev = pd.read_csv(partial)
+        done_counts = prev.condition.value_counts().to_dict()
+        keep = [lbl for lbl, c in grid if done_counts.get(lbl, 0) >= len(c.train_seeds)]
+        prev = prev[prev.condition.isin(keep)]  # drop half-finished conditions
+        rows = prev.to_dict("records")
+        print(f"resume: {len(keep)} condition(s) already complete in {partial.name}: {keep}")
+    done_labels = {r["condition"] for r in rows}
     for i, (label, c) in enumerate(grid, 1):
+        if label in done_labels:
+            print(f"[{i}/{len(grid)}] {label} -- already done, skipped", flush=True)
+            continue
         print(f"[{i}/{len(grid)}] {label}", flush=True)
         rows.extend(run_condition(label, c, device))
+        pd.DataFrame(rows).to_csv(partial, index=False)
     ext = pd.DataFrame(rows)
     ext.to_csv(out_csv, index=False)
+    partial.unlink(missing_ok=True)
     print(f"done in {(time.time() - t0) / 60:.1f} min; wrote {out_csv} ({len(ext)} runs)")
 
     figures(ext, main_df, fig_dir)
