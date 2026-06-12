@@ -1,0 +1,10 @@
+# Core (everything in src/ and scripts/)
+torch>=2.3
+numpy>=1.26
+pandas>=2.0
+matplotlib>=3.8
+
+# Notebook execution only (lejepa_action_identifiability.ipynb, tools/run_notebook.py)
+# nbformat
+# nbclient
+# ipykernel
