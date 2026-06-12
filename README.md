@@ -67,11 +67,11 @@ sharpens the open problem.
 
 Full sweep: 19 conditions × 5 seeds = 95 runs, single GPU (CUDA, torch 2.9.1+cu128), 64.5 min,
 world seed 1234, training seeds 0–4. Complete tables and discussion — including the one
-pre-registered check that **failed** and why — in **[RESULTS.md](RESULTS.md)**. *Provenance
-status:* the run's raw artifacts (`results/metrics.csv`, the FULL-executed notebook, the figures)
-are pending commit from the run machine — see [results/README.md](results/README.md); until they
-land, the tables here and in RESULTS.md are faithful transcriptions of that run's printed output
-and are not independently verifiable from the repo alone.
+pre-registered check that **failed** and why — in **[RESULTS.md](RESULTS.md)**. *Provenance:* the
+run's raw per-run table is committed at [results/metrics.csv](results/metrics.csv); the verdict
+and every aggregate are machine-reproducible from it (one-liner in RESULTS.md), and the figures in
+[results/figures/](results/figures) are regenerated from it. Still pending: the FULL-executed
+notebook of the run — see [results/README.md](results/README.md).
 
 | condition | $R^2_{\text{lin}}$ | $R^2_{\text{orth}}$ | gap | cond$_m$ | $\theta_{\max}$ (°) |
 |---|---|---|---|---|---|

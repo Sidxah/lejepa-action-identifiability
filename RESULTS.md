@@ -9,16 +9,25 @@ Full-mode sweep executed 2026-06-12 on a single CUDA GPU (torch 2.9.1+cu128):
 19 conditions × 5 training seeds = **95 runs**, 64.5 min wall clock. World seed 1234 (one fixed
 world per condition; datasets identical across training seeds), training seeds {0..4}.
 
-**Provenance status, stated exactly.** The numbers in this document are faithful transcriptions of
-that run's printed output — the per-seed sweep log, the aggregate table, and the verdict cell
-rendered by `verdict()` (the same code committed in `src/metrics.py` / `scripts/sweep.py`). The
-run's raw artifacts — `results/metrics.csv`, the four figures, and the FULL-executed notebook —
-are **pending transfer from the run machine and are not yet in this repository**; until they are
-committed, the values here cannot be independently audited from the repo alone (the experiment
-itself can be re-run from the logged seeds with `python scripts/sweep.py`). Note also that the
-notebook committed at the repo root carries embedded outputs from its **QUICK smoke execution**
-(its banner says "NOT science" and its verdict prints INCONCLUSIVE, by design at smoke scale) —
-it is the *source* of the experiment, not the artifact of the full run.
+**Provenance status, stated exactly.** The run's raw per-run table is committed at
+[`results/metrics.csv`](results/metrics.csv) (95 rows, every config field logged,
+`quick=False`, `steps=4000` throughout). Every aggregate in this document is recomputable from it,
+and the verdict is machine-reproducible in one line from the repo root:
+
+```bash
+python -c "import pandas as pd; from src.metrics import verdict, render_verdict; \
+print(render_verdict(verdict(pd.read_csv('results/metrics.csv')), quick=False))"
+```
+
+This reproduces **CONFIRMED** with the exact numbers below — including the FAILED dynamics check —
+plus the SIGReg-off check that the run's notebook had silently skipped (see "What each control
+showed"). The four figures in `results/figures/` are regenerated from this CSV by
+`scripts/sweep.py:make_figures` (their provenance is the CSV, not the run machine's pixels). Two
+caveats remain: the **FULL-executed notebook** of the run is not yet committed (the notebook at
+the repo root embeds its **QUICK smoke execution** — banner "NOT science", verdict INCONCLUSIVE by
+design at smoke scale — it is the *source* of the experiment, not the run artifact), and the CSV
+was transferred from the run machine by the author rather than produced inside this repository's
+history.
 
 ## Headline (base condition: $n=8$, $m=2$, $\rho=0.9$, nonlinear $g$, $\lambda=0.5$)
 
