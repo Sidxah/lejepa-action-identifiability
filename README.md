@@ -142,7 +142,7 @@ between $`\mathrm{col}(Q^\top \hat B)`$ and $`\mathrm{col}(B)`$.
 **M3 — dynamics.** In aligned coordinates $`A = Q^\top \hat R\, Q`$:
 
 ```math
-\hat\rho \;=\; \frac{\operatorname{tr}(A)}{n},
+\hat\rho \;=\; \frac{\mathrm{tr}(A)}{n},
 \qquad
 D_{\mathrm{rel}} \;=\; \frac{\|A - \rho I_n\|_F}{\rho \sqrt{n}}
 ```
