@@ -7,11 +7,18 @@ action-conditioning in this controlled world.**
 
 Full-mode sweep executed 2026-06-12 on a single CUDA GPU (torch 2.9.1+cu128):
 19 conditions × 5 training seeds = **95 runs**, 64.5 min wall clock. World seed 1234 (one fixed
-world per condition; datasets identical across training seeds), training seeds {0..4}. All numbers
-below are computed from that run's `results/metrics.csv` by the pre-registered rules and
-aggregation code in `src/metrics.py` / `scripts/sweep.py` — no metric value in this document was
-produced any other way. The executed notebook and the raw CSV of the run are the provenance
-artifacts for this file.
+world per condition; datasets identical across training seeds), training seeds {0..4}.
+
+**Provenance status, stated exactly.** The numbers in this document are faithful transcriptions of
+that run's printed output — the per-seed sweep log, the aggregate table, and the verdict cell
+rendered by `verdict()` (the same code committed in `src/metrics.py` / `scripts/sweep.py`). The
+run's raw artifacts — `results/metrics.csv`, the four figures, and the FULL-executed notebook —
+are **pending transfer from the run machine and are not yet in this repository**; until they are
+committed, the values here cannot be independently audited from the repo alone (the experiment
+itself can be re-run from the logged seeds with `python scripts/sweep.py`). Note also that the
+notebook committed at the repo root carries embedded outputs from its **QUICK smoke execution**
+(its banner says "NOT science" and its verdict prints INCONCLUSIVE, by design at smoke scale) —
+it is the *source* of the experiment, not the artifact of the full run.
 
 ## Headline (base condition: $n=8$, $m=2$, $\rho=0.9$, nonlinear $g$, $\lambda=0.5$)
 
@@ -26,8 +33,9 @@ artifacts for this file.
 All three sit deep inside the confirmed band. For comparison, V-JEPA 2's reported value at scale
 is ≈ 1.5; this controlled world sits at 1.018. The state is recovered up to rotation
 ($R^2_{\text{orth}} = 0.942$, within 0.0009 of the best unrestricted linear map), the action axis
-is recovered up to the *same* rotation almost exactly, and the embedding isotropy precondition
-holds (mean covariance error 0.152).
+is recovered up to the *same* rotation almost exactly, and the embedding isotropy diagnostic sits
+at mean covariance error 0.152 (a diagnostic the training markdown predicts, not a registered
+criterion).
 
 ## Full per-condition table (mean ± std over 5 seeds)
 
@@ -53,7 +61,9 @@ holds (mean covariance error 0.152).
 | rho=0.99 | 0.737 ±0.049 | 0.714 ±0.066 | 0.0235 | 1.189 ±0.108 | 3.83 | 0.728 ±0.147 | 0.804 | 5/5 |
 | K=16 (> n) | 0.951 ±0.005 | 0.889 ±0.023 | 0.0616 ±0.0176 | 1.040 | 1.13 | 0.893 ±0.001 | 0.011 | 5/5 |
 
-(cond_m means are over finite values; the `m=1` value is trivially 1 by construction and excluded
+(Notation: gap $= R^2_{\text{lin}} - R^2_{\text{orth}}$; $D_{\text{rel}} =
+\|Q^\top \hat R Q - \rho I\|_F / (\rho\sqrt{n})$; conv = seeds passing the convergence flag.
+cond_m means are over finite values; the `m=1` value is trivially 1 by construction and excluded
 from any verdict logic — there the principal angle is the informative readout, θ = 1.73°.)
 
 ## What each control showed
@@ -74,9 +84,9 @@ undertraining — see NOTES.md). This is why the experiment runs at λ = 0.5: th
 isotropy *constraint*; λ is only its enforcement strength.
 
 **Symmetric vs action-conditioned — the direct test of the question.**
-$\Delta R^2_{\text{orth}} = 0.002$ (0.942 vs 0.939): state recovery is statistically
-indistinguishable between the proven action-free regime and the action-conditioned one. The
-passage costs nothing measurable here.
+$\Delta R^2_{\text{orth}} = 0.0024$ (0.9417 vs 0.9393): indistinguishable at the seed-noise scale
+(the seed std is ≈ 0.054; 5 seeds on a shared world — no formal test is claimed). The passage from
+the proven action-free regime to the action-conditioned one costs nothing measurable here.
 
 **Excitation — degrades the action axis, and only the action axis, monotonically.**
 cond$_m$: 1.018 (scale 1.0) → 1.035 (0.5) → 1.192 (0.1), with θ rising to 11.2°, while
@@ -116,8 +126,8 @@ directional check (literal ≥ balanced) passed.
 **"Dynamics recovered" FAILED on the pre-registered criterion:** mean $\hat\rho = 0.829$ vs true
 0.9 (tolerance ±0.05) and $D_{\text{rel}} = 0.246$ (tolerance 0.2). The cause is fully localized:
 **training seed 2** lands in a reproducible suboptimal basin in most base-dimension conditions
-($R^2 \approx 0.84$, $\hat\rho \approx 0.567$, base condition: 4 seeds at $\hat\rho = 0.894$ and
-seed 2 at 0.567 — the mean is exactly $0.829$). Within that basin the run *plateaus*, so the
+($R^2_{\text{lin}} = 0.846$, $\hat\rho = 0.567$ in the base condition: 4 seeds at
+$\hat\rho = 0.894$ and seed 2 at 0.567 — the mean is exactly $0.829$). Within that basin the run *plateaus*, so the
 plateau-based convergence flag does not catch it; the multi-seed protocol does (the large stds in
 the table are this single seed). Honest readings, in order: (1) the criterion as registered fails
 and we report it; (2) the failure is an optimization-landscape phenomenon, not a refutation of the
@@ -130,10 +140,14 @@ seeing the data — the per-seed breakdown is provided so the reader can apply e
 ## Conclusion
 
 In a controlled world satisfying the Gaussian assumptions, with the isotropy constraint actually
-enforced, action-conditioned LeJEPA training recovers the state up to a rotation, the action
-effect up to the same rotation (cond$_m$ = 1.018, an order tighter than V-JEPA 2's reported ≈ 1.5
-at scale), and the dynamics in closed form in 4/5 seeds. The orthogonal ambiguity of the
-identifiability guarantee **survives the passage to action-conditioning** here. The boundary of
+enforced, action-conditioned LeJEPA training recovers the state up to a rotation and the action
+effect up to the same rotation (cond$_m$ = 1.018; on the deviation-from-perfect-rotation scale,
+cond$_m - 1$ = 0.018 vs ≈ 0.5 for V-JEPA 2's reported 1.5 — a scale anchor, not a baseline). The
+pre-registered dynamics check **failed** on its mean-over-seeds criterion ($\hat\rho = 0.829$ vs
+$0.9 \pm 0.05$), driven by the single reproducible optimization basin discussed above; the other
+4/5 seeds recover the dynamics in closed form ($\hat\rho = 0.894$, $D_{\text{rel}} \approx 0.01$).
+The orthogonal ambiguity of the identifiability guarantee **survives the passage to
+action-conditioning** here. The boundary of
 the claim is equally clear: enforcement strength matters (λ = 0.05 fails the precondition),
 excitation is a genuine identifiability condition (rank-deficient actions leave provably
 unidentifiable directions), overcomplete embeddings weaken the rotational signature, and a

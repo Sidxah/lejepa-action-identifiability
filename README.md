@@ -1,17 +1,22 @@
 # Does the orthogonal identifiability ambiguity survive action-conditioning?
 
 A minimal, controlled, ground-truth experiment on LeJEPA-style latent recovery in an
-**action-conditioned** world. Toy scale, reference-grade methodology: every quantity the model is
-supposed to recover is known exactly, every number is reproducible from a logged seed, and the
-verdict is computed by pre-registered decision rules — not written by hand.
+**action-conditioned** world. Toy scale, controlled methodology: every quantity the model is
+supposed to recover is known exactly; every run is seeded and logged (bitwise reproducible on CPU,
+across-seed reproducible on GPU — see *Reproduce*); and the verdict is rendered by decision rules
+fixed in code (`verdict()` in [src/metrics.py](src/metrics.py)), not written by hand. The
+experiment was specified before implementation in [docs/SPEC.md](docs/SPEC.md); every deviation
+from that spec is argued and measured, never silent ([NOTES.md](NOTES.md)).
 
 **Headline result: yes — it survives.** Trained with SIGReg on an action-conditioned
 linear-Gaussian world observed through a frozen nonlinear map, the model recovers the true action
-effect up to a rotation with condition number **1.018 ± 0.007** (1 = exact rotation; V-JEPA 2's
-reported value at scale is ≈ 1.5), while the gap between unrestricted-linear and
-orthogonal-Procrustes state recovery is **0.0009 ± 0.0005** — essentially everything that is
-linearly decodable is decodable by a rotation alone. Verdict under the pre-registered rules:
-**CONFIRMED** (with one secondary check failing honestly; see [RESULTS.md](RESULTS.md)).
+effect up to a rotation — precisely: a scaled orthogonal map, rotation or reflection; we write
+"rotation" for short — with condition number **1.018 ± 0.007** (1 = exact; V-JEPA 2's reported
+value at scale is ≈ 1.5), while the gap between unrestricted-linear and orthogonal-Procrustes
+state recovery is **0.0009 ± 0.0005** — essentially everything that is linearly decodable is
+decodable by a rotation alone. Verdict under the pre-registered rules: **CONFIRMED** — with one
+pre-registered secondary check (dynamics, on the seed mean) **failing** and reported as such; see
+[RESULTS.md](RESULTS.md).
 
 ---
 
@@ -34,14 +39,16 @@ sharpens the open problem.
 
 ## The controlled setup
 
-- **World** (frozen, seeded): $z_{t+1} = \rho z_t + B a_t + \eta_t$ with $z \in \mathbb{R}^8$,
-  $a \sim \mathcal{N}(0, I_2)$, $\rho = 0.9$, and ground-truth action effect $B$. The transition
+- **World** (frozen, seeded): $z_{t+1} = \rho z_t + B a_t + \eta_t$ with $z \in \mathbb{R}^n$
+  ($n = 8$), actions $a \in \mathbb{R}^m$ ($m = 2$), $a \sim \mathcal{N}(0, \Sigma_a)$ with
+  $\Sigma_a = I_2$, $\rho = 0.9$, and ground-truth action effect $B$. The transition
   noise is *balanced*, $\eta \sim \mathcal{N}(0, (1-\rho^2)I - B\Sigma_a B^\top)$, the unique
   Gaussian noise making $\mathcal{N}(0, I)$ exactly stationary — so the only change from the
   proven symmetric setting is the action term itself (the spec's literal noise is kept as a
   measured ablation; see [NOTES.md](NOTES.md)). Observations $x = g(z) \in \mathbb{R}^{64}$
   through a frozen random MLP with a tunable nonlinearity knob.
-- **Model**: small MLP encoder $f: \mathbb{R}^{64} \to \mathbb{R}^8$ + deliberately **linear**
+- **Model**: small MLP encoder $f: \mathbb{R}^{64} \to \mathbb{R}^K$ (embedding dimension
+  $K = n = 8$ by default) + deliberately **linear**
   action-conditioned predictor $P(\hat z, a) = \hat R \hat z + \hat B a + c$, so the learned
   dynamics $(\hat R, \hat B)$ are read off directly. LeJEPA recipe: no teacher–student, no
   stop-gradient; collapse prevention by SIGReg alone.
@@ -49,16 +56,22 @@ sharpens the open problem.
   - **M1** — state up to rotation: unrestricted-linear $R^2$ vs orthogonal-Procrustes $R^2$;
     their gap isolates exactly the non-rotational distortion.
   - **M2 (headline)** — action axis up to rotation: condition number of the residual map
-    $L = (Q^\top \hat B)\, B^{+}$ over its top-$m$ singular values, plus principal angles.
-  - **M3** — dynamics: $\|Q^\top \hat R Q - \rho I\|_F$ and $\hat\rho = \mathrm{tr}(Q^\top \hat R Q)/n$.
+    $L = (Q^\top \hat B)\, B^{+}$ over its top-$m$ singular values ($Q$ = the M1 Procrustes
+    alignment, $B^{+}$ = pseudoinverse of the true effect), plus principal angles.
+  - **M3** — dynamics: $\hat\rho = \mathrm{tr}(Q^\top \hat R Q)/n$ and the normalized error
+    $D_{\text{rel}} = \|Q^\top \hat R Q - \rho I\|_F / (\rho\sqrt{n})$.
 - **Controls**: SIGReg off; paper-default $\lambda$; symmetric ($B=0$) vs action-conditioned;
   action excitation (scale and rank); literal-spec noise; dimension/$\rho$ sensitivity.
 
 ## Results
 
 Full sweep: 19 conditions × 5 seeds = 95 runs, single GPU (CUDA, torch 2.9.1+cu128), 64.5 min,
-world seed 1234, training seeds 0–4. Complete tables, figures and the honest discussion — including
-the one pre-registered check that **failed** and why — in **[RESULTS.md](RESULTS.md)**.
+world seed 1234, training seeds 0–4. Complete tables and discussion — including the one
+pre-registered check that **failed** and why — in **[RESULTS.md](RESULTS.md)**. *Provenance
+status:* the run's raw artifacts (`results/metrics.csv`, the FULL-executed notebook, the figures)
+are pending commit from the run machine — see [results/README.md](results/README.md); until they
+land, the tables here and in RESULTS.md are faithful transcriptions of that run's printed output
+and are not independently verifiable from the repo alone.
 
 | condition | $R^2_{\text{lin}}$ | $R^2_{\text{orth}}$ | gap | cond$_m$ | $\theta_{\max}$ (°) |
 |---|---|---|---|---|---|
@@ -72,7 +85,8 @@ the one pre-registered check that **failed** and why — in **[RESULTS.md](RESUL
 
 Three controls carry the story: removing SIGReg collapses everything (the Gaussian constraint is
 load-bearing, as the theory predicts); the symmetric and action-conditioned worlds recover the
-state equally well ($\Delta R^2_{\text{orth}} = 0.002$ — the ambiguity survives the passage); and
+state equally well ($\Delta R^2_{\text{orth}} = 0.0024$, against a seed std of ≈ 0.054 — the
+ambiguity survives the passage); and
 weakening the action excitation degrades *only* the action-axis metric, down to a provably
 unidentifiable direction under rank-deficient actions while state recovery stays intact.
 
@@ -91,6 +105,13 @@ python -m src.run --lam 0 --label sigreg_off   # any single condition, config-dr
 logged), regenerates the four figures in `results/figures/`, and prints the verdict computed by
 the pre-registered rules in [src/metrics.py](src/metrics.py).
 
+Reproducibility, stated exactly: bitwise on CPU
+(`torch.use_deterministic_algorithms(True, warn_only=True)`); on CUDA/MPS some kernels have no
+deterministic variant, so individual runs reproduce statistically rather than bitwise — every
+conclusion rests on mean ± std across 5 training seeds, never on a single run.
+`requirements.lock.txt` pins the local (macOS) environment the code was verified in; the analyzed
+run used torch 2.9.1+cu128.
+
 The Phase-1 notebook `lejepa_action_identifiability.ipynb` is the same code with full narration
 (every cell pair explains the *why*); `src/` was extracted from it mechanically
 (`tools/extract_modules.py`).
@@ -107,8 +128,10 @@ src/metrics.py     # M1/M2/M3, Procrustes, condition number + pre-registered ver
 src/run.py         # one experiment from a config
 scripts/sweep.py   # the ablation grid, results CSV, figures, verdict
 tests/smoke_test.py
-lejepa_action_identifiability.ipynb   # Phase-1 narrated notebook (QUICK toggle)
-RESULTS.md         # full results & honest interpretation     NOTES.md  # design rationale
+lejepa_action_identifiability.ipynb   # Phase-1 narrated notebook (QUICK toggle; the committed
+                                      # copy embeds QUICK smoke outputs, NOT the full run)
+docs/SPEC.md       # the experiment specification this repo implements (+ NOTEBOOK_ADDENDUM.md)
+RESULTS.md         # full results & interpretation            NOTES.md  # design rationale
 ```
 
 ## Limitations, and what this opens
@@ -121,16 +144,19 @@ $n = 16$ and $\rho = 0.99$, and an overcomplete embedding ($K = 16 > n$) opens t
 non-trivial linear-vs-orthogonal gap (0.062) in the sweep. What this opens: the action-conditioned
 identifiability *proof* (this repo is its testbed), richer worlds (nonlinear dynamics, partial
 observability), and whether the condition-number diagnostic predicts planning performance at
-scale. Research statement: *(link placeholder)*.
+scale. Research statement: link to be added.
 
 ## References
 
 1. R. Balestriero, Y. LeCun. *LeJEPA: Provable and Scalable Self-Supervised Learning Without the
    Heuristics.* arXiv:2511.08544, 2025.
 2. D. Klindt, Y. LeCun, R. Balestriero (2026). Identifiability of LeJEPA-style training in
-   Gaussian latent worlds, symmetric case. *(Full record pending publication.)*
+   Gaussian latent worlds, symmetric case. *(Result as described in [docs/SPEC.md](docs/SPEC.md);
+   full bibliographic record pending publication.)*
 3. M. Assran et al. *V-JEPA 2: Self-Supervised Video Models Enable Understanding, Prediction and
-   Planning.* arXiv:2506.09985, 2025.
+   Planning.* arXiv:2506.09985, 2025. (The "condition number ≈ 1.5" anchor used throughout is the
+   observation as described in [docs/SPEC.md](docs/SPEC.md) — a scale anchor for the metric, not a
+   re-measured baseline.)
 4. T. W. Epps, L. B. Pulley. *A test for normality based on the empirical characteristic
    function.* Biometrika 70(3), 1983.
 5. P. H. Schönemann. *A generalized solution of the orthogonal Procrustes problem.* Psychometrika

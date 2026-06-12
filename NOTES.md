@@ -1,7 +1,10 @@
 # Notes: every design choice, and why
 
-Companion to the code (spec §6). Each entry is written to be defended orally. The notebook
-markdown carries the same arguments inline; this file is the index.
+Companion to the code (the explanation document required by the spec, §6). **The spec itself —
+the document every "the spec says" below refers to — is committed at [docs/SPEC.md](docs/SPEC.md)**
+(packaging addendum: [docs/NOTEBOOK_ADDENDUM.md](docs/NOTEBOOK_ADDENDUM.md)), so each claimed
+contradiction or deviation can be checked against its text rather than taken on faith. Each entry
+is written to be defended orally; the notebook markdown carries the same arguments inline.
 
 ## The target distribution
 
@@ -95,7 +98,10 @@ measured covariance error: 0.152.
 margin). Convergence flag: EMA-smoothed $L_{\text{pred}}$ relative change < 2% over the final 20%
 of steps. *Known limitation, learned the honest way:* the flag detects plateaus, not global
 optima — training seed 2's reproducible suboptimal basin passes it (see RESULTS.md). Non-converged
-runs are reported and excluded from verdict aggregation, never silently dropped.
+runs are reported in the table and excluded from the headline verdict aggregation — with one
+disclosed exception: the SIGReg-off control check is evaluated over *all* runs (see
+Pre-registration below), because a collapse control that never converges would otherwise exclude
+itself from the very check designed to detect collapse.
 
 ## The metrics
 
@@ -121,15 +127,22 @@ $\|A-\rho I\|_F^2 = \|A-\hat\rho I\|_F^2 + n(\hat\rho-\rho)^2$ exact; the eigenv
 is upward-biased (modulus is convex) and kept only as a diagnostic. For $K > n$, the leakage
 $\|(I-QQ^\top)\hat R Q\|_F/\|\hat R Q\|_F$ reports dynamics escaping the recovered subspace.
 
-**Pre-registration.** Thresholds (gate $R^2_{\text{lin}} \ge 0.90$ & ≥ 80% converged; confirmed:
-gap ≤ 0.05 ∧ cond$_m$ ≤ 2 ∧ θ ≤ 15°; broken: gap > 0.15 ∨ cond$_m$ > 5 ∨ θ > 30°) were fixed in
-code before any sweep ran; the conclusion cell renders `verdict(df)` — no hand-typed numbers. The
-2.0 bound is anchored to V-JEPA 2's ≈ 1.5: a finite-sample estimate of a true rotation does not
-sit at exactly 1. One implementation fix was made post hoc and is disclosed: the SIGReg-off check
+**Pre-registration — and exactly how far it is verifiable.** Thresholds (gate
+$R^2_{\text{lin}} \ge 0.90$ & ≥ 80% converged; confirmed: gap ≤ 0.05 ∧ cond$_m$ ≤ 2 ∧ θ ≤ 15°;
+broken: gap > 0.15 ∨ cond$_m$ > 5 ∨ θ > 30°) were fixed in the code before the full sweep was
+executed; the conclusion cell renders `verdict(df)` — no hand-typed numbers. The 2.0 bound is
+anchored to V-JEPA 2's ≈ 1.5: a finite-sample estimate of a true rotation does not sit at exactly
+1. **Verifiability caveat, stated plainly:** this repository's git history begins *after* the full
+run (one initial commit holding code, rules and results together), so the temporal precedence of
+the rules cannot be proven from the repo — it is attested, and supported only by circumstantial
+evidence (the thresholds are loose relative to the measured values; a registered check that failed
+is reported as failed rather than re-thresholded). A tamper-evident record (rules committed before
+data) exists only from this history forward; any future rerun inherits a verifiable chain. One implementation fix was made post hoc and is disclosed: the SIGReg-off check
 is evaluated over all runs rather than converged-only, because the converged-only filter excluded
 the control precisely when it collapses — the very outcome the check exists to detect
-(`_mean_all_finite` in `src/metrics.py`; the notebook that produced the run retains the original
-behavior, and RESULTS.md reports the difference).
+(`_mean_all_finite` in `src/metrics.py`; the notebook version that produced the run retains the
+original behavior — its FULL-executed copy is a pending provenance artifact, see
+`results/README.md` — and RESULTS.md reports the difference).
 
 ## Engineering
 
