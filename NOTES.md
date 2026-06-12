@@ -1,10 +1,9 @@
 # Notes: every design choice, and why
 
 Companion to the code (the explanation document required by the spec, §6). **The spec itself —
-the document every "the spec says" below refers to — is committed at [docs/SPEC.md](docs/SPEC.md)**
-(packaging addendum: [docs/NOTEBOOK_ADDENDUM.md](docs/NOTEBOOK_ADDENDUM.md)), so each claimed
-contradiction or deviation can be checked against its text rather than taken on faith. Each entry
-is written to be defended orally; the notebook markdown carries the same arguments inline.
+the document every "the spec says" below refers to — is committed at
+[docs/SPEC.md](docs/SPEC.md)**, so each claimed contradiction or deviation can be checked against
+its text rather than taken on faith. Each entry is written to be defended orally.
 
 ## The target distribution
 
@@ -140,9 +139,8 @@ is reported as failed rather than re-thresholded). A tamper-evident record (rule
 data) exists only from this history forward; any future rerun inherits a verifiable chain. One implementation fix was made post hoc and is disclosed: the SIGReg-off check
 is evaluated over all runs rather than converged-only, because the converged-only filter excluded
 the control precisely when it collapses — the very outcome the check exists to detect
-(`_mean_all_finite` in `src/metrics.py`; the notebook version that produced the run retains the
-original behavior — its FULL-executed copy is a pending provenance artifact, see
-`results/README.md` — and RESULTS.md reports the difference).
+(`_mean_all_finite` in `src/metrics.py`; the code version that produced the run had the original
+behavior, and RESULTS.md reports the difference).
 
 ## Engineering
 
@@ -155,7 +153,3 @@ and shuffling only — seed spread measures training stochasticity, not data res
 keeps the dependency list at exactly torch/numpy/pandas/matplotlib and makes every run
 self-documenting in shell history. All hyperparameters live in one frozen `Config` dataclass;
 ablations are `dataclasses.replace` copies, and every field is logged into each CSV row.
-
-**Phase-1 ↔ Phase-2 sync.** `src/` and `scripts/sweep.py` are extracted mechanically from the
-notebook's module-tagged cells by `tools/extract_modules.py` (verbatim bodies, curated import
-headers). To change shared logic: edit `tools/build_notebook.py`, rebuild the notebook, re-extract.

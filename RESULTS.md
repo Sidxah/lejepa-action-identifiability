@@ -20,14 +20,11 @@ print(render_verdict(verdict(pd.read_csv('results/metrics.csv')), quick=False))"
 ```
 
 This reproduces **CONFIRMED** with the exact numbers below — including the FAILED dynamics check —
-plus the SIGReg-off check that the run's notebook had silently skipped (see "What each control
-showed"). The four figures in `results/figures/` are regenerated from this CSV by
-`scripts/sweep.py:make_figures` (their provenance is the CSV, not the run machine's pixels). Two
-caveats remain: the **FULL-executed notebook** of the run is not yet committed (the notebook at
-the repo root embeds its **QUICK smoke execution** — banner "NOT science", verdict INCONCLUSIVE by
-design at smoke scale — it is the *source* of the experiment, not the run artifact), and the CSV
-was transferred from the run machine by the author rather than produced inside this repository's
-history.
+plus the SIGReg-off check that the run's original verdict implementation had silently skipped
+(see "What each control showed"). The four figures in `results/figures/` are regenerated from
+this CSV by `scripts/sweep.py:make_figures` (their provenance is the CSV, not the run machine's
+pixels). One caveat remains: the CSV was transferred from the run machine by the author rather
+than produced inside this repository's history.
 
 ## Headline (base condition: $n=8$, $m=2$, $\rho=0.9$, nonlinear $g$, $\lambda=0.5$)
 
@@ -79,11 +76,11 @@ from any verdict logic — there the principal angle is the informative readout,
 
 **SIGReg off (λ = 0) — the key control, and it bites.** Total collapse: $R^2_{\text{lin}} = 0.006$,
 0/5 seeds converged. The Gaussian constraint is load-bearing exactly as the theory predicts, and
-the experiment has discriminative power on this axis. *Evaluation note:* the notebook's verdict
-cell silently skipped this check because its converged-only filter excluded a condition that never
-converges — precisely because it collapses. The repo code evaluates this one check over all runs
-(`_mean_all_finite` in `src/metrics.py`), which is the disclosed Phase-2 fix; the underlying data
-is unchanged.
+the experiment has discriminative power on this axis. *Evaluation note:* the run's original
+verdict implementation silently skipped this check because its converged-only filter excluded a
+condition that never converges — precisely because it collapses. The current code evaluates this
+one check over all runs (`_mean_all_finite` in `src/metrics.py`), a disclosed post-run fix; the
+underlying data is unchanged.
 
 **Paper-default λ = 0.05 — the partial-collapse equilibrium, replicated at 5 seeds.**
 $R^2_{\text{lin}} = 0.501 \pm 0.006$, embedding covariance error 0.850 (vs 0.152 at λ = 0.5),

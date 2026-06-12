@@ -150,7 +150,7 @@ def compute_all_metrics(encoder, predictor, eval_data, world, cfg, device):
 
 # Pre-registered decision rules. Defined BEFORE the sweep executes; the verdict
 # cell at the end only applies them to the measured DataFrame. Justifications in
-# the Section 7 markdown. NO metric value anywhere in this notebook is hand-typed.
+# NOTES.md. NO metric value anywhere in this codebase is hand-typed.
 R2_LIN_GATE = 0.90      # below: latents not linearly decodable -> inconclusive, not "broken"
 MIN_CONV_FRAC = 0.8     # >= 80% of base seeds must pass the convergence flag
 GAP_OK, GAP_BROKEN = 0.05, 0.15        # R2_lin - R2_orth bands
@@ -171,7 +171,7 @@ def _mean_all_finite(df, condition, col):
     """Mean over ALL runs of a condition (converged or not), finite values only.
 
     Used for the SIGReg-off control check, and only there. Phase-2 fix, disclosed
-    in NOTES.md/RESULTS.md: in the notebook run, the converged-only filter
+    in NOTES.md/RESULTS.md: in the original run, the converged-only filter
     silently voided this check because the lambda=0 control never converges --
     precisely BECAUSE it collapses, which is the predicted degradation the check
     exists to detect. Restricting a collapse check to converged runs is a

@@ -157,7 +157,7 @@ Full sweep: 19 conditions × 5 seeds = **95 runs**, single GPU (CUDA, torch 2.9.
 64.5 min, world seed 1234, training seeds 0–4. Raw per-run table committed at
 [results/metrics.csv](results/metrics.csv) — the verdict and every aggregate are
 machine-reproducible from it (one-liner in [RESULTS.md](RESULTS.md)); figures regenerate from the
-CSV. Still pending: the FULL-executed notebook of the run ([results/README.md](results/README.md)).
+CSV (provenance details: [results/README.md](results/README.md)).
 
 | condition | R²_lin | R²_orth | gap | cond_m | θ_max (°) |
 |---|---|---|---|---|---|
@@ -222,11 +222,10 @@ src/train.py       # LeJEPA training loop (no EMA, no stop-gradient)
 src/metrics.py     # M1/M2/M3, Procrustes, condition number + pre-registered verdict
 src/run.py         # one experiment from a config
 scripts/sweep.py   # the ablation grid, results CSV, figures, verdict
+scripts/sweep_extended.py   # the pre-registered robustness extension
 tests/smoke_test.py
-lejepa_action_identifiability.ipynb   # Phase-1 narrated notebook (QUICK toggle; the committed
-                                      # copy embeds QUICK smoke outputs, NOT the full run)
-docs/SPEC.md       # the experiment specification this repo implements (+ NOTEBOOK_ADDENDUM.md)
-results/           # the run's raw metrics.csv + figures (provenance: results/README.md)
+docs/SPEC.md       # the experiment specification this repo implements
+results/           # the runs' raw metrics CSVs + figures (provenance: results/README.md)
 RESULTS.md         # full results & interpretation            NOTES.md  # design rationale
 ```
 

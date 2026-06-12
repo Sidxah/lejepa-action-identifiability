@@ -52,7 +52,7 @@ class Config:
     """Every knob of the experiment, in one frozen object.
 
     Defaults are the FULL-mode settings from the experiment spec. QUICK mode
-    (make_config) shrinks dimensions/steps/seeds so the whole notebook runs in
+    (make_config) shrinks dimensions/steps/seeds so the whole pipeline runs in
     seconds as a smoke test. Ablations are dataclasses.replace()-modified
     copies of the base config, so every run's full configuration is logged.
     """
